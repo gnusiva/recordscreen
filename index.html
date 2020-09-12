@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Record Screen</title>
+    <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous"> -->
+</head>
+<body>
+    <!-- <video id="video" width="300" class="border"></video> -->
+    <button onclick="startRecord()" > Start Recording</button>
+    <button onclick="stopRecording()"> Stop Recording</button>
+    <a id="link" > Download</a>
+
+<script>
+
+    let mediaRecorder;
+    let screenStream;
+    let chunk = [];
+
+    async function startRecord() {
+        chunk = [];
+        screenStream = await navigator.mediaDevices['getDisplayMedia']({video: true});
+        // let videoEl = document.getElementById('video');
+        // videoEl.srcObject = screenStream;
+        // videoEl.play();
+        var options = { mimeType: "video/webm; codecs=vp9" };
+        mediaRecorder = new MediaRecorder(screenStream, options);
+        mediaRecorder.ondataavailable = (e) => {
+            chunk.push(e.data);
+        };
+        mediaRecorder.start(100);
+    }
+
+    async function stopRecording() {
+        screenStream.getTracks().forEach( track => {
+         track.stop();
+        });
+        mediaRecorder.stop();
+        debugger;
+        const blob = new Blob(chunk, { 'type' : 'video/webm;codecs=vp9' });
+        url = window.URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        document.body.appendChild(a);
+        a.style = "display: none";
+        a.href = url;
+        a.download = 'fileName';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+</script>
+
+</body>
+</html>
