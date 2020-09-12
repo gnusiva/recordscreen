@@ -7,23 +7,32 @@
     <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous"> -->
 </head>
 <body>
-    <!-- <video id="video" width="300" class="border"></video> -->
-    <button onclick="startRecord()" > Start Recording</button>
-    <button onclick="stopRecording()"> Stop Recording</button>
-    <a id="link" > Download</a>
+    <div class="recordContainer">
+        <div class="recordButtons">
+            <video id="video" class="border" controls></video>
+            <div>
+                <button onclick="startRecord()" > Start Recording</button>
+                <button onclick="stopRecording()"> Stop Recording</button>
+            </div>
+            <div>
+                <button onclick="download()">Download</button>
+            </div>
+        </div>
+
+    </div>
+
 
 <script>
-
     let mediaRecorder;
     let screenStream;
     let chunk = [];
-
+    let blob;
+    let url;
     async function startRecord() {
+        if ( url ) { window.URL.revokeObjectURL(url); }
+        blob = null;
         chunk = [];
         screenStream = await navigator.mediaDevices['getDisplayMedia']({video: true});
-        // let videoEl = document.getElementById('video');
-        // videoEl.srcObject = screenStream;
-        // videoEl.play();
         var options = { mimeType: "video/webm; codecs=vp9" };
         mediaRecorder = new MediaRecorder(screenStream, options);
         mediaRecorder.ondataavailable = (e) => {
@@ -37,19 +46,69 @@
          track.stop();
         });
         mediaRecorder.stop();
-        debugger;
-        const blob = new Blob(chunk, { 'type' : 'video/webm;codecs=vp9' });
+        blob = new Blob(chunk, { 'type' : 'video/webm;codecs=vp9' });
         url = window.URL.createObjectURL(blob);
+        document.getElementById('video').src = url;
+    }
+
+    function download() {
         var a = document.createElement("a");
         document.body.appendChild(a);
         a.style = "display: none";
         a.href = url;
-        a.download = 'fileName';
+        const date = new Date();
+        a.download = 'Recording ' + formatDate(date);
         a.click();
         window.URL.revokeObjectURL(url);
     }
 
+    function formatDate(date) {
+        var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        var d = date;
+        var day = days[d.getDay()];
+        var hr = d.getHours();
+        var min = d.getMinutes();
+        if (min < 10) {
+            min = "0" + min;
+        }
+        var ampm = "AM";
+        if( hr > 12 ) {
+            hr -= 12;
+            ampm = "PM";
+        }
+        var sec = d.getSeconds();
+        var date = d.getDate();
+        var month = months[d.getMonth()];
+        var year = d.getFullYear();  
+        return date + '-' + month + '-' + year + ' ' + hr + '-' + min + '-' + sec + ' ' + ampm
+    }
+
 </script>
 
+<style>
+    body {
+        margin: 0px;
+    }
+    .recordContainer {
+        width: 100vw;
+        height: 100vh;
+    }
+    .recordButtons{
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .recordButtons button {
+        margin: 10px;
+    }
+    .recordButtons video {
+        border: 1px solid grey;
+        height: 80vh;
+        width: 80vw;
+    }
+</style>
 </body>
 </html>
